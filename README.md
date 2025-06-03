@@ -52,42 +52,37 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 
 ### Login & Registration
 
-- ![Login](screenshots/login.png)
-- ![Register as User](screenshots/register-user.png)
-- ![Register as Worker](screenshots/register-worker.png)
+- ![Login](screenshots/login.jpg)
+- ![Register as User](screenshots/register-user.jpg)
+- ![Register as Worker](screenshots/register-worker.jpg)
 
 ---
 
 ###  User Dashboard
 
-- ![Home Page](screenshots/homepage.png)
-- ![User Dashboard](screenshots/user-dashboard.png)
-- ![Service Search](screenshots/search-service.png)
-- ![Request Form](screenshots/request-form.png)
-- ![Request Review](screenshots/request-review.png)
+- ![Home Page](screenshots/user-dashboard.jpg)
+- ![User Dashboard](screenshots/user-dashboard.jpg)
+- ![Service Search](screenshots/search-service.jpg)
+- ![Request Form](screenshots/request-form.jpg)
+- ![Request Review](screenshots/request-review.jpg)
+- ![User-Profile](screenshots/user-profile.jpg)
 
 ---
 
 ### Worker Dashboard
 
-- ![Worker Dashboard](screenshots/worker-dashboard.png)
-- ![Accept/Reject Requests](screenshots/accept-request.png)
-
----
-
-### Feedback System
-
-- ![Feedback Form](screenshots/feedback-form.png)
-- ![Worker View Feedback](screenshots/feedback-worker.png)
+- ![Worker Dashboard](screenshots/worker-dashboard.jpg)
+- ![Accept/Reject Requests](screenshots/accept-request.jpg)
 
 ---
 
 ### Admin Panel
 
-- ![Admin Login](screenshots/admin-login.png)
-- ![Admin Dashboard](screenshots/admin-dashboard.png)
-- ![View Service Requests](screenshots/all-requests.png)
-- ![View Contact Messages](screenshots/contact-admin.png)
+- ![Admin Login](screenshots/admin-login.jpg)
+- ![Admin Dashboard](screenshots/admin-dashboard.jpg)
+- ![View Service Requests](screenshots/all-requests.jpg)
+- ![View All Workers](screenshots/all-workers.jpg)
+- ![View Contact Messages](screenshots/contact-admin.jpg)
 
 ---
 
