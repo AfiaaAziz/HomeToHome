@@ -47,13 +47,16 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 
 ## Visual Walkthrough
 
-### Home Page
+### Home Page:
 - ![HomeScreen](screenshots/homepage.jpg)
 
-### Login & Registration
-
+### Login:
 - ![Login](screenshots/login.jpg)
+
+  ### User Registration:
 - ![Register as User](screenshots/register-user.jpg)
+
+  ### Worker Registration:
 - ![Register as Worker](screenshots/register-worker.jpg)
 
 ---
@@ -62,7 +65,7 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 
 - ![User Dashboard](screenshots/user-dashboard.jpg)
 - ![Service Search](screenshots/search-service.jpg)
-- ![Request Form](screenshots/request-form.jpg)
+- ![Request Form](screenshots/request-form.png)
 - ![Request Review](screenshots/request-review.jpg)
 - ![User-Profile](screenshots/user-profile.jpg)
 
