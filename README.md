@@ -45,11 +45,12 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 
 ---
 
-## 🖥️ Screenshots
+## Visual Walkthrough
 
-📍 All screenshots should be placed in the `/screenshots` folder.
+### Home Page
+- ![HomeScreen](screenshots/homepage.jpg)
 
-### 🔐 Login & Registration
+### Login & Registration
 
 - ![Login](screenshots/login.png)
 - ![Register as User](screenshots/register-user.png)
@@ -57,7 +58,7 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 
 ---
 
-### 🏠 Home Page & User Dashboard
+###  User Dashboard
 
 - ![Home Page](screenshots/homepage.png)
 - ![User Dashboard](screenshots/user-dashboard.png)
@@ -67,21 +68,21 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 
 ---
 
-### 👨‍🔧 Worker Dashboard
+### Worker Dashboard
 
 - ![Worker Dashboard](screenshots/worker-dashboard.png)
 - ![Accept/Reject Requests](screenshots/accept-request.png)
 
 ---
 
-### ⭐ Feedback System
+### Feedback System
 
 - ![Feedback Form](screenshots/feedback-form.png)
 - ![Worker View Feedback](screenshots/feedback-worker.png)
 
 ---
 
-### 🛠️ Admin Panel
+### Admin Panel
 
 - ![Admin Login](screenshots/admin-login.png)
 - ![Admin Dashboard](screenshots/admin-dashboard.png)
