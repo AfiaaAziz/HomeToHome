@@ -1,0 +1,277 @@
+﻿@page "/edit-request"
+@using HomeToHome.Models
+@inject RequestService RequestService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.WebUtilities
+@using System.Net
+
+<style>
+  
+    body {
+        background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+        min-height: 100vh;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .container {
+        max-width: 1100px;
+    }
+
+    .card {
+        border: none;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        }
+
+    h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        letter-spacing: -0.025em;
+    }
+
+    h4 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #333333;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-control {
+        border: 1px solid #d0d0d0;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 0.95rem;
+        background: #fafafa;
+        color: #1a1a1a;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+            outline: none;
+        }
+
+        .form-control[readonly] {
+            background: #e5e5e5;
+            cursor: not-allowed;
+        }
+
+    .btn-primary {
+        background: #1a1a1a;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+        .btn-primary:hover {
+            background: #333333;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+    .btn-back {
+        background: #636e72;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #ffffff;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+        .btn-back:hover {
+            background: #2d3436;
+            transform: translateY(-2px);
+        }
+
+        .btn-back:active {
+            transform: translateY(0);
+        }
+
+    .text-danger {
+        font-size: 0.85rem;
+        color: #e63946;
+    }
+
+    label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-in-out;
+    }
+
+    .image-section {
+        background: url('/images/EditRequest.jpeg') no-repeat center center;
+        background-size: cover;
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+ 
+    @@keyframes fadeIn {
+        0% {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+</style>
+
+<div class="container mt-5 fade-in">
+    <div class="card">
+        <div class="row g-0">
+         
+            <div class="col-md-6 p-5">
+                <h2 class="text-center mb-4">Edit Service Request</h2>
+
+                @if (request != null)
+                {
+                    <EditForm Model="@request" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger mb-4" />
+
+                        <div class="row">
+                            <h4>User & Worker Info</h4>
+
+                            <div class="col-md-6 mb-4">
+                                <label for="userEmail">User Email</label>
+                                <InputText id="userEmail" @bind-Value="request.UserEmail" class="form-control" readonly />
+                                <ValidationMessage For="@(() => request.UserEmail)" />
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label for="workerEmail">Worker Email</label>
+                                <InputText id="workerEmail" @bind-Value="request.WorkerEmail" class="form-control" readonly />
+                                <ValidationMessage For="@(() => request.WorkerEmail)" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <h4>Service Details</h4>
+
+                            <div class="col-md-6 mb-4">
+                                <label for="serviceType">Service Type</label>
+                                <InputText id="serviceType" @bind-Value="request.ServiceType" class="form-control" />
+                                <ValidationMessage For="@(() => request.ServiceType)" />
+                            </div>
+
+                           
+                            <div class="col-md-6 mb-4">
+                                <label for="preferredDate">Preferred Date</label>
+                                <InputDate id="preferredDate" @bind-Value="request.PreferredDate" class="form-control" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                <ValidationMessage For="@(() => request.PreferredDate)" />
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label for="preferredTime">Preferred Time</label>
+                                <InputText id="preferredTime" @bind-Value="request.PreferredTime" class="form-control" placeholder="e.g. 2:00 PM" />
+                                <ValidationMessage For="@(() => request.PreferredTime)" />
+                            </div>
+
+                            <div class="col-md-6 mb-4">
+                                <label for="city">City</label>
+                                <InputText id="city" @bind-Value="request.City" class="form-control" />
+                                <ValidationMessage For="@(() => request.City)" />
+                            </div>
+
+                            <div class="col-12 mb-4">
+                                <label for="description">Description</label>
+                                <InputTextArea id="description" @bind-Value="request.Description" class="form-control" rows="4" />
+                                <ValidationMessage For="@(() => request.Description)" />
+                            </div>
+
+                            <div class="col-12 mb-4">
+                                <label for="fullAddress">Full Address</label>
+                                <InputTextArea id="fullAddress" @bind-Value="request.FullAddress" class="form-control" rows="4" />
+                                <ValidationMessage For="@(() => request.FullAddress)" />
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">Update Request</button>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-back btn-lg w-100" @onclick="NavigateToReviewRequests">Back to Review Requests</button>
+                        </div>
+                    </EditForm>
+                }
+                else
+                {
+                    <div class="alert alert-info text-center">Request not found.</div>
+                }
+            </div>
+
+            
+            <div class="col-md-6 image-section d-none d-md-block">
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ServiceRequest request = new();
+    private string email = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("requestId", out var requestId) && int.TryParse(requestId, out var id))
+        {
+            var requests = await RequestService.GetAllRequestsAsync();
+            request = requests.FirstOrDefault(r => r.Id == id) ?? new ServiceRequest();
+        }
+
+        if (query.TryGetValue("email", out var emailValue))
+        {
+            email = WebUtility.UrlDecode(emailValue);
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        await RequestService.UpdateRequestAsync(request);
+        NavigationManager.NavigateTo($"/review-requests?email={Uri.EscapeDataString(email)}");
+    }
+
+    private void NavigateToReviewRequests()
+    {
+        NavigationManager.NavigateTo($"/review-requests?email={Uri.EscapeDataString(email)}");
+    }
+}

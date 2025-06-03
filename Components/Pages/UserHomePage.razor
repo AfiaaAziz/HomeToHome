@@ -1,0 +1,192 @@
+﻿@page "/user-page"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<style>
+    
+    body, html {
+        height: 100%;
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fff; 
+        color: #111; 
+    }
+
+    .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        background-image:  url('/images/UserHomePage.webp');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+    }
+
+
+    .profile-icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 50%;
+        padding: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .profile-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-icon i {
+            font-size: 24px;
+            color: #2d2d2d;
+        }
+
+    
+    .dashboard-container {
+        border: 2px solid #111;
+        max-width: 480px;
+        width: 100%;
+        padding: 40px 30px;
+        background-color: rgba(254, 254, 254, 0.65);
+        border-radius: 20px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        text-align: center;
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+
+        .dashboard-container:hover {
+            box-shadow: 0 14px 40px rgba(0,0,0,0.12);
+            transform: translateY(-4px);
+        }
+
+ 
+    .dashboard-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #000;
+    }
+
+ 
+    .email-label {
+        font-size: 1.05rem;
+        color: #444;
+        margin-bottom: 40px;
+        word-break: break-word;
+        user-select: text;
+    }
+
+  
+    .dashboard-button {
+        width: 100%;
+        font-size: 1.1rem;
+        padding: 14px 0;
+        margin-bottom: 18px;
+        border: 2px solid #111;
+        border-radius: 50px;
+        background-color: #111;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    }
+
+        .dashboard-button:hover {
+            background-color: #fff;
+            color: #111;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+        }
+
+ 
+    .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<div class="page-wrapper">
+    <div class="profile-icon" @onclick="NavigateToProfile" title="View Profile">
+        <i class="fas fa-user"></i>
+    </div>
+    <div class="dashboard-container">
+        <h3 class="dashboard-title">Welcome to Your Dashboard</h3>
+        <p class="email-label">@Email</p>
+
+        <div class="button-group">
+            <button class="dashboard-button" @onclick="NavigateToSearch">Search Services</button>
+            <button class="dashboard-button" @onclick="NavigateToRequests">Review Requests</button>
+            <button class="dashboard-button" @onclick="Logout">Logout</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Email { get; set; } = string.Empty;
+
+    private bool _isInitialized;
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrEmpty(Email))
+        {
+            var uri = new Uri(NavigationManager.Uri);
+            Email = System.Web.HttpUtility.ParseQueryString(uri.Query).Get("email") ?? string.Empty;
+        }
+
+        _isInitialized = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isInitialized && firstRender)
+        {
+            if (string.IsNullOrEmpty(Email))
+            {
+                Email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userEmail") ?? string.Empty;
+                StateHasChanged();
+            }
+
+            if (!string.IsNullOrEmpty(Email))
+            {
+                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "userEmail", Email);
+            }
+
+        }
+    }
+
+    private void NavigateToSearch()
+    {
+        NavigationManager.NavigateTo($"/search-workers?email={Uri.EscapeDataString(Email)}");
+    }
+
+    private void NavigateToRequests()
+    {
+        NavigationManager.NavigateTo($"/review-requests?email={Uri.EscapeDataString(Email)}");
+    }
+
+    private async void Logout()
+    {
+        await JSRuntime.InvokeVoidAsync("sessionStorage.removeItem", "userEmail");
+        NavigationManager.NavigateTo("/login");
+    }
+
+    private void NavigateToProfile()
+    {
+        NavigationManager.NavigateTo($"/user-profile?email={Uri.EscapeDataString(Email)}");
+    }
+}

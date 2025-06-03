@@ -1,0 +1,317 @@
+﻿@page "/feedback-form"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.WebUtilities
+@inject FeedbackService FeedbackService
+@inject UserService UserService
+@inject NavigationManager NavigationManager
+
+<style>
+    .feedback-form-container {
+        display: flex;
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: url('/images/Feedback.jpeg') no-repeat center center fixed;
+        background-size: cover;
+    }
+
+    .form-side {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        background-color: transparent; 
+    }
+
+    .form-section {
+        width: 100%;
+        max-width: 400px;
+        padding: 30px;
+        border-radius: 15px;
+        background-color: rgba(255, 255, 255, 0.95); 
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        animation: slideUp 1s ease-in-out;
+    }
+
+        .form-section h2 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        transition: 0.3s ease;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.6);
+        }
+
+    .star-rating {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    .star {
+        font-size: 30px;
+        color: #ccc;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+        .star.selected {
+            color: #f1c40f;
+        }
+
+    .star-rating .star:hover,
+    .star-rating .star.hovered {
+        color: #f1c40f;
+    }
+
+    .btn-submit {
+        width: 100%;
+        background: #2d2d2d;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 16px;
+        transition: 0.3s ease;
+    }
+
+        .btn-submit:hover {
+            background: #000;
+            transform: scale(1.02);
+        }
+
+    .alert-success {
+        background: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    @@keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<div class="feedback-form-container">
+    <div class="form-side">
+        <div class="form-section">
+            <h2>Provide Feedback</h2>
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert-success">
+                    @successMessage
+                    <button @onclick="() => successMessage = null" style="margin-left: 10px; border: none; background: none; color: #155724; cursor: pointer;">Dismiss</button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert-error">
+                    @errorMessage
+                    <button @onclick="() => errorMessage = null" style="margin-left: 10px; border: none; background: none; color: #721c24; cursor: pointer;">Dismiss</button>
+                </div>
+            }
+
+            @if (string.IsNullOrEmpty(Email) || RequestId == 0 || string.IsNullOrEmpty(WorkerEmail))
+            {
+                <div class="alert-error">
+                    Invalid request. Please return to the dashboard and try again.
+                    <button class="btn-submit" @onclick="NavigateToDashboard">Back to Dashboard</button>
+                </div>
+            }
+            else if (isLoading)
+            {
+                <div class="alert-info" style="background: #e3f2fd; color: #1565c0; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 15px;">
+                    Loading user data...
+                </div>
+            }
+            else
+            {
+                <EditForm Model="@feedback" OnValidSubmit="HandleSubmit" FormName="FeedbackForm">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <InputText @bind-Value="feedback.Name" class="form-control" placeholder="Your Name" readonly />
+                        <ValidationMessage For="@(() => feedback.Name)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Your Email</label>
+                        <InputText @bind-Value="feedback.Email" class="form-control" placeholder="Your Email" readonly />
+                        <ValidationMessage For="@(() => feedback.Email)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Rating</label>
+                        <div class="star-rating" @onmouseleave="() => hoveredRating = 0">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                int star = i;
+                                <i class="fas fa-star star @(feedback.Rating >= star || hoveredRating >= star ? "selected" : "")"
+                                   @onclick="() => SetRating(star)"
+                                   @onmouseover="() => hoveredRating = star"></i>
+                            }
+                        </div>
+                        <ValidationMessage For="@(() => feedback.Rating)" />
+                    </div>
+
+                    <div class="form-group">
+                        <label>Your Feedback</label>
+                        <InputTextArea @bind-Value="feedback.Message" class="form-control" placeholder="Your Feedback" rows="4" />
+                        <ValidationMessage For="@(() => feedback.Message)" />
+                    </div>
+
+                    <button type="submit" class="btn-submit" disabled="@(isSubmitting || !string.IsNullOrEmpty(successMessage))">Submit Feedback</button>
+                </EditForm>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Email { get; set; } = string.Empty;
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int RequestId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string WorkerEmail { get; set; } = string.Empty;
+
+    private HomeToHome.Models.Feedback feedback = new();
+    private string? successMessage;
+    private string? errorMessage;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private int hoveredRating;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+           
+            var uri = new Uri(NavigationManager.Uri);
+            var query = QueryHelpers.ParseQuery(uri.Query);
+            Email = !string.IsNullOrEmpty(Email) ? Email : (query.TryGetValue("email", out var email) ? email.ToString() : string.Empty);
+            if (RequestId == 0)
+            {
+                RequestId = query.TryGetValue("requestId", out var requestId) && int.TryParse(requestId, out var id) ? id : 0;
+            }
+            WorkerEmail = !string.IsNullOrEmpty(WorkerEmail) ? WorkerEmail : (query.TryGetValue("workerEmail", out var workerEmail) ? workerEmail.ToString() : string.Empty);
+
+            if (!string.IsNullOrEmpty(Email))
+            {
+                var user = await UserService.GetUserByEmailAsync(Email);
+                if (user != null)
+                {
+                    feedback.Name = $"{user.FirstName} {user.LastName}".Trim();
+                    feedback.Email = user.Email;
+                }
+                else
+                {
+                    feedback.Name = "Unknown User";
+                    feedback.Email = Email;
+                    errorMessage = "User not found. Please ensure your email is correct.";
+                }
+            }
+            else
+            {
+                feedback.Name = "Unknown User";
+                feedback.Email = string.Empty;
+                errorMessage = "Email is required to submit feedback.";
+            }
+
+            feedback.ServiceRequestId = RequestId;
+            feedback.WorkerEmail = WorkerEmail;
+            feedback.Rating = 1; 
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load user data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SetRating(int rating)
+    {
+        feedback.Rating = rating;
+        hoveredRating = 0; 
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+            successMessage = null;
+
+            feedback.SubmittedAt = DateTime.UtcNow;
+            await FeedbackService.SaveFeedbackAsync(feedback);
+            successMessage = "Feedback submitted successfully! Redirecting to dashboard...";
+
+            
+            await Task.Delay(2000);
+            NavigateToDashboard();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to submit feedback: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void NavigateToDashboard()
+    {
+        NavigationManager.NavigateTo($"/review-requests?email={Uri.EscapeDataString(Email)}");
+    }
+}

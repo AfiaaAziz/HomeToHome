@@ -1,0 +1,208 @@
+﻿@page "/contact"
+@rendermode InteractiveServer
+@inherits GoogleMapDemoComponentBase
+@inject ContactService ContactService
+
+<style>
+
+    .contact-page {
+        display: flex;
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+
+    .image-container {
+        flex: 1;
+        background: url("/images/Contact.webp") no-repeat center center;
+        background-size: cover;
+        position: relative;
+    }
+
+ 
+    .form-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        background-color: #f5f5f5;
+    }
+
+    .form-section {
+        width: 100%;
+        max-width: 400px;
+        padding: 30px;
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.1);
+        animation: slideUp 1s ease-in-out;
+    }
+
+
+    .map-container {
+        flex: 2;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
+    }
+
+    #map {
+        width: 100%;
+        height: 500px;
+        border-radius: 15px;
+        box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.3);
+        border: 1px solid #ddd;
+    }
+
+   
+    .form-section h2 {
+        margin-bottom: 20px;
+        font-size: 28px;
+        color: #333;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border-radius: 25px;
+        border: 1px solid #ccc;
+        transition: 0.3s ease;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #f2994a;
+            box-shadow: 0 0 8px rgba(242, 153, 74, 0.6);
+        }
+
+    .btn-submit {
+        width: 100%;
+        background-color: #2d2d2d;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 12px;
+        font-size: 16px;
+        transition: 0.3s ease;
+    }
+
+        .btn-submit:hover {
+            background-color: #000;
+            transform: scale(1.02);
+        }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+   
+    @@keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    
+    @@media (max-width: 768px) {
+        .contact-page {
+            flex-direction: column;
+        }
+
+        .image-container {
+            height: 300px;
+        }
+    }
+</style>
+
+<div class="contact-page">
+ 
+    <div class="image-container"></div>
+
+
+    <div class="form-container">
+        <div class="form-section">
+            <h2>Contact Us</h2>
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert-success">@successMessage</div>
+            }
+            <EditForm Model="@formModel" OnValidSubmit="HandleSubmit" FormName="ContactUsForm">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="form-group">
+                    <InputText @bind-Value="formModel.Name" class="form-control" placeholder="Name" />
+                    <ValidationMessage For="@(() => formModel.Name)" />
+                </div>
+
+                <div class="form-group">
+                    <InputText @bind-Value="formModel.Email" class="form-control" placeholder="Email" />
+                    <ValidationMessage For="@(() => formModel.Email)" />
+                </div>
+
+                <div class="form-group">
+                    <InputTextArea @bind-Value="formModel.Message" class="form-control" rows="4" placeholder="Message" />
+                    <ValidationMessage For="@(() => formModel.Message)" />
+                </div>
+
+                <button type="submit" class="btn-submit">SUBMIT</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+<script>
+    (g => {
+        var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "_ib", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => {
+            await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e;//maps.${c}apis.com/maps/api/js? + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })
+            ({ key: "AIzaSyBdXmtyD1S1OlF8Ise4y98LLhOT-Le55EQ", v: "weekly" });
+</script>
+
+<GoogleMap ApiKey="@ApiKey"
+           Center="new GoogleMapCenter(33.7138, 73.0247)"
+           Height="400"
+           Width="100"
+           Zoom="10"
+           Markers="markers" />
+
+@code {
+    private string successMessage= string.Empty;
+
+    private Contact formModel = new();
+
+    private async Task HandleSubmit()
+    {
+        await ContactService.SaveContactAsync(formModel);
+        successMessage = "Your message has been sent successfully!";
+        formModel = new(); 
+    }
+
+    List<GoogleMapMarker> markers = new()
+    {
+        new GoogleMapMarker()
+        {
+            PinElement = new PinElement { Scale = 1.5 },
+            Position = new GoogleMapMarkerPosition(33.7138, 73.0247),
+            Title = "Single family house with modern design",
+        },
+    };
+}

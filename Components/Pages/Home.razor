@@ -1,0 +1,125 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+ <style>
+    @@keyframes zoomSlow {
+        0% {
+            transform: scale(1);
+        }
+        100% {
+            transform: scale(1.1);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -60%);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    .home-banner {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .carousel-inner img {
+        width: 100%;
+        height: 100vh;
+        object-fit: cover;
+        animation: zoomSlow 20s infinite alternate;
+    }
+
+    .overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        background: rgba(0, 0, 0, 0.6);
+        padding: 40px;
+        border-radius: 15px;
+        text-align: center;
+        max-width: 800px;
+        animation: fadeIn 2s ease-in-out forwards;
+        opacity: 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .main-title {
+        font-size: 60px;
+        font-weight: 900;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .welcome-text {
+        font-size: 20px;
+        margin-bottom: 15px;
+        letter-spacing: 1.5px;
+        font-weight: 300;
+    }
+
+    .subtitle {
+        font-size: 36px;
+        margin-bottom: 20px;
+        font-weight: 700;
+        color: red;
+    }
+
+    .description {
+        font-size: 18px;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+
+    .read-more-btn {
+        background-color: red;
+        color: white;
+        padding: 15px 30px;
+        text-decoration: none;
+        font-weight: bold;
+        border-radius: 8px;
+        transition: background-color 0.3s, transform 0.3s;
+        display: inline-block;
+        font-size: 18px;
+    }
+
+    .read-more-btn:hover {
+        background-color: darkred;
+        transform: scale(1.1);
+        color: white; 
+}
+
+   
+</style>
+
+<Carousel Autoplay="CarouselAutoPlay.StartOnPageLoad" ShowIndicators="true">
+
+        <CarouselItem Active="true" Interval="3000">
+        <Image Src="/images/HomePageImage1.webp" />
+        </CarouselItem >
+        <CarouselItem Interval="3000">
+        <Image Src="/images/HomePageImage2.webp" />
+        </CarouselItem>
+        <CarouselItem Interval="3000">
+        <Image Src="/images/HomePageImage3.webp" />
+        </CarouselItem>
+        <div class="overlay">
+            <h1 class="main-title">| Home Services |</h1>
+            <p class="welcome-text">WELCOME TO HOME 2 HOME</p>
+            <h2 class="subtitle">Best Home Services</h2>
+            <p class="description">
+                Transform your home with our top-tier cleaning and maintenance services. Let us handle the work while you enjoy a spotless, stress-free living space.
+            </p>
+            <a href="/about" class="read-more-btn">Discover More</a>
+        </div>
+    </Carousel>

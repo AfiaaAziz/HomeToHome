@@ -1,0 +1,189 @@
+﻿@page "/workerregister"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+@inject HomeToHome.Services.WorkerService WorkerService
+@inject NavigationManager NavigationManager
+
+<div class="container mt-5 fade-in">
+    <div class="row justify-content-center align-items-center shadow-lg rounded-4 overflow-hidden" style="background: #fff;">
+
+       
+        <div class="col-md-6 d-none d-md-block p-0">
+            <img src="/images/WokerRegistrationForm_Image.webp" alt="Worker Registration" class="img-fluid h-100 w-100 object-fit-cover" style="object-fit: cover;">
+        </div>
+
+        <div class="col-md-6 p-5">
+            <h2 class="text-center mb-4">Create Your Worker Profile</h2>
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success text-center" role="alert">
+                    @successMessage
+                </div>
+            }
+
+
+            <EditForm Model="@worker" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row">
+                    <h4 class="mt-3">Personal Information</h4>
+                    <div class="col-md-6 mb-3">
+                        <label>First Name</label>
+                        <InputText @bind-Value="worker.FirstName" class="form-control" />
+                        <ValidationMessage For="@(() => worker.FirstName)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Last Name</label>
+                        <InputText @bind-Value="worker.LastName" class="form-control" />
+                        <ValidationMessage For="@(() => worker.LastName)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Email Address</label>
+                        <InputText @bind-Value="worker.Email" class="form-control" />
+                        <ValidationMessage For="@(() => worker.Email)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Phone Number</label>
+                        <InputText @bind-Value="worker.PhoneNumber" class="form-control" />
+                        <ValidationMessage For="@(() => worker.PhoneNumber)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Date of Birth</label>
+                        <InputDate @bind-Value="worker.DateOfBirth" class="form-control" />
+                        <ValidationMessage For="@(() => worker.DateOfBirth)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Gender</label>
+                        <InputSelect @bind-Value="worker.Gender" class="form-control">
+                            <option value="">-- Select --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => worker.Gender)" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <h4 class="mt-4">Address & Designation</h4>
+
+                    <div class="col-md-6 mb-3">
+                        <label>City</label>
+                        <InputText @bind-Value="worker.City" class="form-control" />
+                        <ValidationMessage For="@(() => worker.City)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Full Address</label>
+                        <InputTextArea @bind-Value="worker.FullAddress" class="form-control" />
+                        <ValidationMessage For="@(() => worker.FullAddress)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Designation</label>
+                        <InputSelect @bind-Value="worker.Designation" class="form-control">
+                            <option value="">-- Select --</option>
+                            <option value="Plumber">Plumber</option>
+                            <option value="Electrician">Electrician</option>
+                            <option value="Cleaner">Cleaner</option>
+                            <option value="Carpenter">Carpenter</option>
+                            <option value="Painter">Painter</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => worker.Designation)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Experience (Years)</label>
+                        <InputNumber @bind-Value="worker.Experience" class="form-control" />
+                        <ValidationMessage For="@(() => worker.Experience)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Preferred Working Hours</label>
+                        <InputSelect @bind-Value="worker.PreferredWorkingHours" class="form-control">
+                            <option value="">-- Select --</option>
+                            <option value="Morning">Morning</option>
+                            <option value="Evening">Evening</option>
+                            <option value="Full-time">Full-time</option>
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <h4 class="mt-4">Skills & Security</h4>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Skills (comma-separated)</label>
+                        <InputText @bind-Value="worker.SkillsInput" class="form-control" />
+                        <ValidationMessage For="@(() => worker.SkillsInput)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>CNIC Number</label>
+                        <InputText @bind-Value="worker.CNIC" class="form-control" />
+                        <ValidationMessage For="@(() => worker.CNIC)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Password</label>
+                        <InputText type="password" @bind-Value="worker.Password" class="form-control" />
+                        <ValidationMessage For="@(() => worker.Password)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Confirm Password</label>
+                        <InputText type="password" @bind-Value="worker.ConfirmPassword" class="form-control" />
+                        <ValidationMessage For="@(() => worker.ConfirmPassword)" />
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg hover-grow w-100">Register</button>
+                </div>
+            </EditForm>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    private Worker worker = new Worker();
+    private string successMessage = string.Empty;
+
+    private async Task HandleValidSubmit()
+    {
+        if (!string.IsNullOrWhiteSpace(worker.SkillsInput))
+        {
+            worker.Skills = worker.SkillsInput
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .ToList();
+        }
+
+        bool isSaved = await WorkerService.RegisterWorker(worker);
+        if (isSaved)
+        {
+            successMessage = "Registration successful! Redirecting to login...";
+
+        
+            StateHasChanged();
+
+           
+            await Task.Delay(1000);
+
+            NavigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            Console.WriteLine("Error registering worker.");
+        }
+    }
+
+
+}

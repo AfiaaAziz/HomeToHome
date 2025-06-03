@@ -1,0 +1,332 @@
+﻿@page "/review-requests"
+@rendermode InteractiveServer
+@using HomeToHome.Models
+@inject RequestService RequestService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: url('/images/ReviewRequestPage.webp') no-repeat center center fixed;
+        background-size: cover;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 20px;
+    }
+
+    .table-container {
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+        font-size: 32px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 40px;
+        color: #2c3e50;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+    }
+
+        .table thead th {
+            background: #2d3436;
+            color: #fff;
+            padding: 14px 16px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .table tbody tr {
+            background: #fdfdfd;
+            border-bottom: 1px solid #eee;
+            transition: background 0.25s ease-in-out;
+        }
+
+            .table tbody tr:hover {
+                background: #f1f6fb;
+            }
+
+        .table td {
+            padding: 14px 16px;
+            font-size: 15px;
+            color: #2d2d2d;
+            text-align: center;
+        }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+        .badge.Pending {
+            background-color: #ffe082;
+            color: #795548;
+        }
+
+        .badge.Accepted {
+            background-color: #a5d6a7;
+            color: #2e7d32;
+        }
+
+        .badge.Rejected {
+            background-color: #f06292;
+            color: #ad1457;
+        }
+
+        .badge.Cancelled {
+            background-color: #b0bec5;
+            color: #37474f;
+        }
+
+    .btn-feedback, .btn-edit, .btn-cancel {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin: 0 4px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-feedback {
+        background: #3498db;
+        color: #fff;
+    }
+
+        .btn-feedback:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+
+    .btn-edit {
+        background: #2ecc71;
+        color: #fff;
+    }
+
+        .btn-edit:hover {
+            background: #27ae60;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        .btn-edit:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    .btn-cancel {
+        background: #e74c3c;
+        color: #fff;
+    }
+
+        .btn-cancel:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+
+    .btn-back {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #636e72;
+        color: #fff;
+        margin-top: 20px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .btn-back:hover {
+            background: #2d3436;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(99, 110, 114, 0.3);
+        }
+
+    .alert-info {
+        background-color: #e3f2fd;
+        border: 1px solid #90caf9;
+        padding: 18px;
+        color: #1565c0;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 600;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="container">
+    <div class="table-container">
+        <h2>Your Service Requests</h2>
+
+        @if (requests != null && requests.Any())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Worker</th>
+                        <th>Service</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in requests)
+                    {
+                        <tr>
+                            <td>@request.Id</td>
+                            <td>@request.WorkerEmail</td>
+                            <td>@request.ServiceType</td>
+                            <td>@(request.PreferredDate.HasValue ? request.PreferredDate.Value.ToString("yyyy-MM-dd") : "N/A")</td>
+                            <td>@(!string.IsNullOrWhiteSpace(request.PreferredTime) ? request.PreferredTime : "N/A")</td>
+                            <td>@request.City</td>
+                            <td>
+                                <span class="badge @GetBadgeClass(request.RequestStatus)">@request.RequestStatus</span>
+                            </td>
+                            <td>
+                                @if (request.RequestStatus == "Accepted")
+                                {
+                                    <button class="btn-feedback" @onclick="() => NavigateToFeedback(request.Id, request.WorkerEmail)">Give Feedback</button>
+                                }
+                                @if (request.RequestStatus == "Pending")
+                                {
+                                    <button class="btn-edit" @onclick="() => NavigateToEditRequest(request.Id)">Edit</button>
+                                    <button class="btn-cancel" @onclick="() => CancelRequest(request.Id)">Cancel</button>
+                                }
+                                else if (request.RequestStatus == "Cancelled")
+                                {
+                                    <button class="btn-edit" disabled>Edit</button>
+                                    <span>-</span>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert-info">No service requests found.</div>
+        }
+
+        <div>
+            <button class="btn-back" @onclick="NavigateToDashboard">Back to Dashboard</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Email { get; set; } = string.Empty;
+
+    private List<ServiceRequest> requests = new();
+    private bool _isInitialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(Email))
+        {
+            var uri = new Uri(NavigationManager.Uri);
+            Email = System.Web.HttpUtility.ParseQueryString(uri.Query).Get("email") ?? string.Empty;
+        }
+
+        if (!string.IsNullOrEmpty(Email))
+        {
+            requests = await RequestService.GetRequestsByUserEmailAsync(Email);
+        }
+
+        _isInitialized = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isInitialized && firstRender)
+        {
+            if (string.IsNullOrEmpty(Email))
+            {
+                Email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userEmail") ?? string.Empty;
+                if (!string.IsNullOrEmpty(Email))
+                {
+                    requests = await RequestService.GetRequestsByUserEmailAsync(Email);
+                    StateHasChanged();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(Email))
+            {
+                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "userEmail", Email);
+            }
+        }
+    }
+
+    private string GetBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "Pending",
+            "Accepted" => "Accepted",
+            "Rejected" => "Rejected",
+            "Cancelled" => "Cancelled",
+            _ => "Pending"
+        };
+    }
+
+    private void NavigateToFeedback(int requestId, string workerEmail)
+    {
+        NavigationManager.NavigateTo($"/feedback-form?email={Uri.EscapeDataString(Email)}&requestId={requestId}&workerEmail={Uri.EscapeDataString(workerEmail)}");
+    }
+
+    private void NavigateToEditRequest(int requestId)
+    {
+        NavigationManager.NavigateTo($"/edit-request?email={Uri.EscapeDataString(Email)}&requestId={requestId}");
+    }
+
+    private async Task CancelRequest(int requestId)
+    {
+        var request = requests.FirstOrDefault(r => r.Id == requestId);
+        if (request != null)
+        {
+            request.RequestStatus = "Cancelled";
+            await RequestService.UpdateRequestAsync(request);
+            requests = await RequestService.GetRequestsByUserEmailAsync(Email);
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToDashboard()
+    {
+        NavigationManager.NavigateTo($"/user-page?email={Uri.EscapeDataString(Email)}");
+    }
+}

@@ -1,0 +1,250 @@
+﻿@page "/view-workers"
+@rendermode InteractiveServer
+@inject WorkerService WorkerService
+@inject FeedbackService FeedbackService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<style>
+    body, html {
+        height: 100%;
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #fff;
+    }
+
+    .page-wrapper {
+        min-height: 100vh;
+        padding: 20px;
+        background: url('/images/ViewWorker.webp') ;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+    }
+
+    .section {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    }
+
+        .section h3 {
+            font-size: 1.5em;
+            color: #007bff;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+
+    .table-container {
+        overflow-x: auto;
+        margin-bottom: 20px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .table th {
+            background: #f4f4f4;
+            font-weight: bold;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+    .alert-info {
+        padding: 15px;
+        background: #d1ecf1;
+        color: #0c5460;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .alert-error {
+        padding: 15px;
+        background: #f8d7da;
+        color: #721c24;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .skill-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .skill-chip {
+        background: #e0e0e0;
+        padding: 5px 12px;
+        border-radius: 12px;
+        font-size: 0.9em;
+    }
+
+    .btn-back {
+        padding: 10px 20px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 1em;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="section">
+        <h3>Workers</h3>
+        @if (isLoading)
+        {
+            <div class="alert-info">Loading data...</div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert-error">
+                <span>@errorMessage</span>
+                <button @onclick="ClearError" style="border: none; background: none; color: #721c24; cursor: pointer; font-size: 0.9em;">Dismiss</button>
+            </div>
+        }
+        else
+        {
+            <div class="table-container">
+                @if (workers.Any())
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>City</th>
+                                <th>Designation</th>
+                                <th>Experience</th>
+                                <th>Skills</th>
+                                <th>Feedback</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var worker in workers)
+                            {
+                                <tr>
+                                    <td>@worker.FirstName @worker.LastName</td>
+                                    <td>@worker.Email</td>
+                                    <td>@worker.City</td>
+                                    <th>@worker.Designation</th>
+                                    <td>@(worker.Experience.HasValue ? $"{worker.Experience} year(s)" : "N/A")</td>
+                                    <td>
+                                        <div class="skill-chips">
+                                            @foreach (var skill in worker.Skills)
+                                            {
+                                                <span class="skill-chip">@skill</span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (workerFeedback.ContainsKey(worker.Email) && workerFeedback[worker.Email].Any())
+                                        {
+                                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                                @foreach (var feedback in workerFeedback[worker.Email])
+                                                {
+                                                    <li>
+                                                        <strong>Rating:</strong> @feedback.Rating / 5<br />
+                                                        <strong>Message:</strong> @(feedback.Message.Length > 50 ? feedback.Message.Substring(0, 50) + "..." : feedback.Message)<br />
+                                                        <strong>Submitted:</strong> @feedback.SubmittedAt.ToString("yyyy-MM-dd")
+                                                    </li>
+                                                }
+                                            </ul>
+                                        }
+                                        else
+                                        {
+                                            <span>No feedback</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert-info">No workers found.</div>
+                }
+            </div>
+        }
+        <button class="btn-back" @onclick="NavigateBack">Back to Dashboard</button>
+    </div>
+</div>
+
+@code {
+    private List<Worker> workers = new();
+    private Dictionary<string, List<HomeToHome.Models.Feedback>> workerFeedback = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string adminEmail = string.Empty;
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Email { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+
+           
+            adminEmail = !string.IsNullOrEmpty(Email) ? Email : await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "adminEmail");
+            if (string.IsNullOrEmpty(adminEmail))
+            {
+                NavigationManager.NavigateTo("/admin-login");
+                return;
+            }
+
+            
+            workers = await WorkerService.GetAllWorkersAsync();
+            foreach (var worker in workers)
+            {
+                var feedback = await FeedbackService.GetFeedbackByWorkerEmailAsync(worker.Email);
+                workerFeedback[worker.Email] = feedback;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearError()
+    {
+        errorMessage = string.Empty;
+        StateHasChanged();
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo($"/admin-panel?email={Uri.EscapeDataString(adminEmail)}");
+    }
+}

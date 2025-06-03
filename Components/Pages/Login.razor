@@ -1,0 +1,209 @@
+﻿@page "/login"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@inject WorkerService WorkerService
+@inject UserService UserService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+
+<style>
+    .background-container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .background-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        filter: brightness(0.85);
+    }
+
+    .content-overlay {
+        position: relative;
+        z-index: 1;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .login-card {
+        background-color: rgba(255, 255, 255, 0.7);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        animation: fadeInSlide 0.7s ease-out forwards;
+    }
+
+
+    h3 {
+        color: black;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        animation: fadeIn 1.2s ease-in-out;
+    }
+
+    .form-control {
+        border-radius: 0.5rem;
+    }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+            border-color: #0d6efd;
+        }
+
+    .btn-submit {
+        width: 100%;
+        background-color: #2d2d2d;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        padding: 12px;
+        font-size: 16px;
+        transition: 0.3s ease;
+    }
+
+        .btn-submit:hover {
+            background-color: #000;
+            transform: scale(1.02);
+        }
+
+    .register-links {
+        text-align: center;
+        margin-top: 1.5rem;
+        font-size: 0.9rem;
+    }
+
+        .register-links a {
+            color: black;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+            .register-links a:hover {
+                text-decoration: underline;
+            }
+
+    .alert {
+        width: 100%;
+        max-width: 450px;
+        margin: 1rem auto 0;
+    }
+
+    @@keyframes fadeInSlide {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+<div class="background-container">
+    <img src="/images/login1.webp" alt="Background" class="background-image" />
+    <div class="content-overlay">
+        <div class="login-card">
+            <h3>Welcome Back</h3>
+            <EditForm Model="@loginModel" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <InputText @bind-Value="loginModel.Email" class="form-control" />
+                    <ValidationMessage For="@(() => loginModel.Email)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <InputText @bind-Value="loginModel.Password" class="form-control" type="password" />
+                    <ValidationMessage For="@(() => loginModel.Password)" />
+                </div>
+
+                <button type="submit" class="btn-submit">Login</button>
+
+                @if (loginFailed)
+                {
+                    <div class="alert alert-danger mt-3 text-center" role="alert">
+                        Invalid email or password. Please try again.
+                    </div>
+                }
+            </EditForm>
+
+
+            <div class="register-links">
+                Don't have an account?<br />
+                <a href="/userregister">Register as User</a> |
+                <a href="/workerregister">Register as Worker</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (loginFailed)
+{
+    <div class="alert alert-danger text-center" role="alert">
+        Invalid email or password.
+    </div>
+}
+
+@code {
+    private LoginUserModel loginModel = new();
+    private bool loginFailed = false;
+
+    private async Task HandleValidSubmit()
+    {
+
+        var worker = await WorkerService.AuthenticateWorker(loginModel.Email, loginModel.Password);
+        if (worker != null)
+        {
+            NavigationManager.NavigateTo($"/worker-page?email={Uri.EscapeDataString(loginModel.Email)}");
+            return;
+        }
+
+        var user = await UserService.AuthenticateUser(loginModel.Email, loginModel.Password);
+        if (user != null)
+        {
+            NavigationManager.NavigateTo($"/user-page?email={Uri.EscapeDataString(loginModel.Email)}");
+            return;
+        }
+
+        loginFailed = true;
+    }
+
+    public class LoginUserModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

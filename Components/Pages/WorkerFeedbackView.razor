@@ -1,0 +1,282 @@
+﻿@page "/worker-feedback-view"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.WebUtilities
+@inject FeedbackService FeedbackService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<style>
+    .worker-feedback-view {
+        font-family: 'Segoe UI', sans-serif;
+        background: url('/images/WorkerFeedbackView.jpeg') no-repeat center center fixed;
+        background-size: cover;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 60px auto;
+        padding: 20px;
+    }
+
+    .feedback-card {
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+        animation: fadeIn 0.6s ease-in-out;
+    }
+
+        .feedback-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+        .feedback-header h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+    .star-rating {
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+    }
+
+    .star {
+        color: #ccc;
+    }
+
+        .star.selected {
+            color: #f1c40f;
+        }
+
+    .rating-text {
+        margin-left: 10px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .feedback-content {
+        font-size: 16px;
+        color: #2d2d2d;
+        margin-bottom: 10px;
+    }
+
+    .feedback-meta {
+        font-size: 14px;
+        color: #666;
+        font-style: italic;
+    }
+
+    .btn-back {
+        display: block;
+        margin: 20px auto;
+        padding: 12px 24px;
+        background: #3498db;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .btn-back:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+
+    .alert-info {
+        background-color: #e3f2fd;
+        border: 1px solid #90caf9;
+        color: #1565c0;
+        padding: 18px;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .container {
+            margin: 20px;
+            padding: 10px;
+        }
+
+        .feedback-card {
+            padding: 20px;
+        }
+    }
+</style>
+
+<div class="worker-feedback-view">
+    <div class="container">
+        <h2 style="text-align: center; color: #2c3e50; margin-bottom: 30px;">Your Feedback</h2>
+
+        @if (isLoading)
+        {
+            <div class="alert-info">Loading feedback...</div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert-error">
+                @errorMessage
+                <button @onclick="() => errorMessage = null" style="margin-left: 10px; border: none; background: none; color: #721c24; cursor: pointer;">Dismiss</button>
+            </div>
+        }
+        else if (string.IsNullOrEmpty(WorkerEmail))
+        {
+            <div class="alert-error">
+                Worker email is missing. Please return to the dashboard and try again.
+                <button class="btn-back" @onclick="NavigateToDashboard">Back to Dashboard</button>
+            </div>
+        }
+        else if (feedbacks.Any())
+        {
+            foreach (var feedback in feedbacks)
+            {
+                <div class="feedback-card">
+                    <div class="feedback-header">
+                        <h3>From: @(feedback.Name ?? "Anonymous")</h3>
+                        <div class="star-rating">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="fas fa-star star @(i <= feedback.Rating ? "selected" : "")"></i>
+                            }
+                            <span class="rating-text">@feedback.Rating/5</span>
+                        </div>
+                    </div>
+                    <div class="feedback-content">@(feedback.Message ?? "No message provided.")</div>
+                    <div class="feedback-meta">
+                        <p>Request #: @(feedback.ServiceRequestId)</p>
+                        <p>Submitted: @(feedback.SubmittedAt.ToString("MMMM dd, yyyy"))</p>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert-info">No feedback received.</div>
+        }
+
+        <button class="btn-back" @onclick="NavigateToDashboard">Back to Dashboard</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string WorkerEmail { get; set; } = string.Empty;
+
+    private List<HomeToHome.Models.Feedback> feedbacks = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isLoading = true;
+            if (string.IsNullOrEmpty(WorkerEmail))
+            {
+                var uri = new Uri(NavigationManager.Uri);
+                var query = QueryHelpers.ParseQuery(uri.Query);
+                WorkerEmail = query.TryGetValue("email", out var email) ? email.ToString() : string.Empty;
+            }
+
+            if (!string.IsNullOrEmpty(WorkerEmail))
+            {
+                feedbacks = await FeedbackService.GetFeedbackByWorkerEmailAsync(WorkerEmail);
+            }
+            else
+            {
+                errorMessage = "Worker email is required to view feedback.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load feedback: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && string.IsNullOrEmpty(WorkerEmail))
+        {
+            try
+            {
+                isLoading = true;
+                WorkerEmail = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userEmail") ?? string.Empty;
+                if (!string.IsNullOrEmpty(WorkerEmail))
+                {
+                    feedbacks = await FeedbackService.GetFeedbackByWorkerEmailAsync(WorkerEmail);
+                    StateHasChanged();
+                }
+                else
+                {
+                    errorMessage = "Worker email is required to view feedback.";
+                }
+
+                if (!string.IsNullOrEmpty(WorkerEmail))
+                {
+                    await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "userEmail", WorkerEmail);
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to load feedback: {ex.Message}";
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private void NavigateToDashboard()
+    {
+        NavigationManager.NavigateTo($"/worker-page?email={Uri.EscapeDataString(WorkerEmail)}");
+    }
+}

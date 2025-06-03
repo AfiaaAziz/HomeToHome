@@ -1,0 +1,326 @@
+﻿@page "/search-workers"
+@using HomeToHome.Models
+@inject WorkerService WorkerService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+@using System.Net
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/SearchWorker.webp');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: #212529;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        min-height: 100vh;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 30px;
+    }
+
+    h2 {
+        text-align: center;
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 40px;
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .search-container {
+        max-width: 850px;
+        margin: 0 auto 50px;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+        .search-container h3 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+
+    .search-box {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .search-box input {
+            width: 60%;
+            padding: 14px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+            .search-box input::placeholder {
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            .search-box input:focus {
+                border-color: rgba(255, 255, 255, 0.5);
+                box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+        .search-box button {
+            background: linear-gradient(135deg, #2d2d2d, #4a4a4a);
+            border: none;
+            border-radius: 50px;
+            padding: 14px 30px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+            .search-box button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+                background: linear-gradient(135deg, #4a4a4a, #2d2d2d);
+            }
+
+    .card-glass {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+        .card-glass:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        }
+
+    .card-body {
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+    }
+
+    .card-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+
+    .card-subtitle {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 15px;
+    }
+
+    .card-body p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 15px;
+        margin-bottom: 10px;
+    }
+
+    .skill-chip {
+        background: linear-gradient(135deg, #2d2d2d, #4a4a4a);
+        color: #ffffff;
+        border-radius: 15px;
+        padding: 6px 14px;
+        margin: 4px;
+        font-size: 13px;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+        .skill-chip:hover {
+            transform: scale(1.05);
+        }
+
+    .btn-request {
+        margin-top: 20px;
+        width: 100%;
+        background: linear-gradient(135deg, #2d2d2d, #4a4a4a);
+        border: none;
+        padding: 12px;
+        border-radius: 50px;
+        color: white;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+        .btn-request:hover {
+            background: linear-gradient(135deg, #4a4a4a, #2d2d2d);
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+    .alert-info {
+        margin: 30px auto;
+        max-width: 600px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        color: #ffffff;
+        font-weight: 500;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-back {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #6c757d, #5a6268);
+        color: white;
+        margin: 30px auto;
+        display: block;
+        width: 220px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+        .btn-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #5a6268, #6c757d);
+        }
+</style>
+
+<div class="container">
+    <h2>Search Workers for @Email</h2>
+
+    <div class="search-container">
+        <h3>Search Workers by Skill</h3>
+        <div class="search-box">
+            <input @bind="searchTerm" placeholder="Search by skill e.g. electrician, plumber..." />
+            <button @onclick="Search">
+                Search
+            </button>
+        </div>
+    </div>
+
+    @if (workers != null && workers.Any())
+    {
+        <div class="row px-4">
+            @foreach (var worker in workers)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card card-glass h-100">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <div>
+                                <h5 class="card-title">@worker.FirstName @worker.LastName</h5>
+                                <h6 class="card-subtitle">@worker.Designation</h6>
+                                <p><strong>City:</strong> @worker.City</p>
+                                <p><strong>Email:</strong> @worker.Email</p>
+                                <p><strong>Experience:</strong> @worker.Experience year(s)</p>
+                                <p>
+                                    <strong>Skills:</strong><br />
+                                    @foreach (var skill in worker.Skills)
+                                    {
+                                        <span class="skill-chip">@skill</span>
+                                    }
+                                </p>
+                            </div>
+                            <button class="btn-request" @onclick="() => RequestService(worker.Email)">
+                                Request Service
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (searched)
+    {
+        <div class="alert alert-info">No workers found with that skill.</div>
+    }
+
+    <button class="btn-back" @onclick="NavigateToDashboard">Back to Dashboard</button>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string Email { get; set; } = string.Empty;
+
+    private string searchTerm= string.Empty;
+    private List<Worker> workers = new();
+    private bool searched = false;
+    private bool _isInitialized;
+
+    protected override void OnInitialized()
+    {
+        if (string.IsNullOrEmpty(Email))
+        {
+            var uri = new Uri(NavigationManager.Uri);
+            Email = System.Web.HttpUtility.ParseQueryString(uri.Query).Get("email") ?? string.Empty;
+        }
+
+        _isInitialized = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isInitialized && firstRender)
+        {
+            if (string.IsNullOrEmpty(Email))
+            {
+                Email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userEmail") ?? string.Empty;
+                StateHasChanged();
+            }
+
+            if (!string.IsNullOrEmpty(Email))
+            {
+                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "userEmail", Email);
+            }
+        }
+    }
+
+    private async Task Search()
+    {
+        searched = true;
+        workers = await WorkerService.SearchWorkersBySkill(searchTerm);
+    }
+
+    private void RequestService(string workerEmail)
+    {
+        NavigationManager.NavigateTo($"/request-form?workerEmail={WebUtility.UrlEncode(workerEmail)}");
+    }
+
+    private void NavigateToDashboard()
+    {
+        NavigationManager.NavigateTo($"/user-page?email={Uri.EscapeDataString(Email)}");
+    }
+}

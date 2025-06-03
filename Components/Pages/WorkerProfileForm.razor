@@ -1,0 +1,370 @@
+﻿@page "/worker-profile"
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Forms
+@inject HomeToHome.Services.WorkerService WorkerService
+@inject NavigationManager NavigationManager
+@using System.Web
+
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: url('/images/WorkerProfileForm.jpeg') no-repeat center center fixed;
+        background-size: cover;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 20px;
+    }
+
+    .form-container {
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+        font-size: 32px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 40px;
+        color: #2c3e50;
+    }
+
+    h4 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        border: 1px solid #d0d0d0;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 15px;
+        background: #fdfdfd;
+        color: #2d2d2d;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            outline: none;
+        }
+
+        .form-control[readonly] {
+            background: #e5e5e5;
+            cursor: not-allowed;
+        }
+
+    .btn-primary {
+        background: #3498db;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        transition: background 0.3s ease, transform 0.2s ease;
+        width: 100%;
+    }
+
+        .btn-primary:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+    .btn-back {
+        background: #636e72;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        transition: background 0.3s ease, transform 0.2s ease;
+        width: 100%;
+    }
+
+        .btn-back:hover {
+            background: #2d3436;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(99, 110, 114, 0.3);
+        }
+
+        .btn-back:active {
+            transform: translateY(0);
+        }
+
+    .text-danger {
+        font-size: 13px;
+        color: #e74c3c;
+    }
+
+    label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .alert-success {
+        background-color: #a5d6a7;
+        border: 1px solid #4caf50;
+        padding: 18px;
+        color: #2e7d32;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        0% {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+
+</style>
+
+<div class="container fade-in">
+    <div class="form-container">
+        <h2>Update Worker Profile</h2>
+
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert-success">@successMessage</div>
+        }
+
+        @if (worker != null)
+        {
+            <EditForm Model="@worker" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger mb-4" />
+
+                <div class="row">
+                    <h4>Personal Information</h4>
+                    <div class="col-md-6 mb-3">
+                        <label>First Name</label>
+                        <InputText @bind-Value="worker.FirstName" class="form-control" />
+                        <ValidationMessage For="@(() => worker.FirstName)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Last Name</label>
+                        <InputText @bind-Value="worker.LastName" class="form-control" />
+                        <ValidationMessage For="@(() => worker.LastName)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Email Address</label>
+                        <InputText @bind-Value="worker.Email" class="form-control" readonly />
+                        <ValidationMessage For="@(() => worker.Email)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Phone Number</label>
+                        <InputText @bind-Value="worker.PhoneNumber" class="form-control" />
+                        <ValidationMessage For="@(() => worker.PhoneNumber)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Date of Birth</label>
+                        <InputDate @bind-Value="worker.DateOfBirth" class="form-control" />
+                        <ValidationMessage For="@(() => worker.DateOfBirth)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Gender</label>
+                        <InputSelect @bind-Value="worker.Gender" class="form-control">
+                            <option value="">-- Select --</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => worker.Gender)" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <h4>Address & Designation</h4>
+
+                    <div class="col-md-6 mb-3">
+                        <label>City</label>
+                        <InputText @bind-Value="worker.City" class="form-control" />
+                        <ValidationMessage For="@(() => worker.City)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Full Address</label>
+                        <InputTextArea @bind-Value="worker.FullAddress" class="form-control" />
+                        <ValidationMessage For="@(() => worker.FullAddress)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Designation</label>
+                        <InputSelect @bind-Value="worker.Designation" class="form-control">
+                            <option value="">-- Select --</option>
+                            <option value="Plumber">Plumber</option>
+                            <option value="Electrician">Electrician</option>
+                            <option value="Cleaner">Cleaner</option>
+                            <option value="Carpenter">Carpenter</option>
+                            <option value="Painter">Painter</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => worker.Designation)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Experience (Years)</label>
+                        <InputNumber @bind-Value="worker.Experience" class="form-control" />
+                        <ValidationMessage For="@(() => worker.Experience)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Preferred Working Hours</label>
+                        <InputSelect @bind-Value="worker.PreferredWorkingHours" class="form-control">
+                            <option value="">-- Select --</option>
+                            <option value="Morning">Morning</option>
+                            <option value="Evening">Evening</option>
+                            <option value="Full-time">Full-time</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => worker.PreferredWorkingHours)" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <h4>Skills & Security</h4>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Skills (comma-separated)</label>
+                        <InputText @bind-Value="worker.SkillsInput" class="form-control" />
+                        <ValidationMessage For="@(() => worker.SkillsInput)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>CNIC Number</label>
+                        <InputText @bind-Value="worker.CNIC" class="form-control" />
+                        <ValidationMessage For="@(() => worker.CNIC)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Password</label>
+                        <InputText type="password" @bind-Value="worker.Password" class="form-control" />
+                        <ValidationMessage For="@(() => worker.Password)" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label>Confirm Password</label>
+                        <InputText type="password" @bind-Value="worker.ConfirmPassword" class="form-control" />
+                        <ValidationMessage For="@(() => worker.ConfirmPassword)" />
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn-primary">Update Profile</button>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="button" class="btn-back" @onclick="NavigateToDashboard">Back to Dashboard</button>
+                </div>
+            </EditForm>
+        }
+        else
+        {
+            <div class="alert-info">Worker profile not found.</div>
+        }
+    </div>
+</div>
+
+@code {
+    private Worker worker = new();
+    private string successMessage = string.Empty;
+    private string email = string.Empty;
+    private string originalHashedPassword = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        email = HttpUtility.ParseQueryString(uri.Query).Get("email") ?? string.Empty;
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            worker = await WorkerService.GetWorkerByEmailAsync(email) ?? new Worker();
+            worker.SkillsInput = string.Join(", ", worker.Skills);
+            originalHashedPassword = worker.Password; 
+            worker.Password = string.Empty; 
+            worker.ConfirmPassword = string.Empty; 
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (!string.IsNullOrWhiteSpace(worker.SkillsInput))
+        {
+            worker.Skills = worker.SkillsInput
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .ToList();
+        }
+
+        if (string.IsNullOrWhiteSpace(worker.Password) && string.IsNullOrWhiteSpace(worker.ConfirmPassword))
+        {
+            worker.Password = originalHashedPassword;
+        }
+        else
+        {
+           
+            if (worker.Password != worker.ConfirmPassword)
+            {
+                successMessage = "Passwords do not match.";
+                StateHasChanged();
+                return;
+            }
+        }
+
+        bool isUpdated = await WorkerService.UpdateWorkerAsync(worker);
+        if (isUpdated)
+        {
+            successMessage = "Profile updated successfully! Redirecting to dashboard...";
+            StateHasChanged();
+            await Task.Delay(2000);
+            NavigationManager.NavigateTo($"/worker-page?email={Uri.EscapeDataString(email)}");
+        }
+        else
+        {
+            successMessage = "Error updating profile.";
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToDashboard()
+    {
+        NavigationManager.NavigateTo($"/worker-page?email={Uri.EscapeDataString(email)}");
+    }
+}

@@ -1,0 +1,382 @@
+﻿@page "/worker-page"
+@using HomeToHome.Models
+@inject RequestService RequestService
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: url('/images/WorkerHomePage.webp') no-repeat center center fixed;
+        background-size: cover;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 20px;
+        position: relative;
+    }
+
+    .profile-icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 50%;
+        padding: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .profile-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .profile-icon i {
+            font-size: 24px;
+            color: #2d2d2d;
+        }
+
+    .table-container {
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+        font-size: 32px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 40px;
+        color: #2c3e50;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: center;
+    }
+
+        .table thead th {
+            background: #2d3436;
+            color: #fff;
+            padding: 14px 16px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .table tbody tr {
+            background: #fdfdfd;
+            border-bottom: 1px solid #eee;
+            transition: background 0.25s ease-in-out;
+        }
+
+            .table tbody tr:hover {
+                background: #f1f6fb;
+            }
+
+        .table td {
+            padding: 14px 16px;
+            font-size: 15px;
+            color: #2d2d2d;
+            text-align: center;
+        }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+        .badge.Pending {
+            background-color: #ffe082;
+            color: #795548;
+        }
+
+        .badge.Accepted {
+            background-color: #a5d6a7;
+            color: #2e7d32;
+        }
+
+        .badge.Rejected {
+            background-color: #f06292;
+            color: #ad1457;
+        }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .btn-accept,
+    .btn-reject,
+    .btn-logout,
+    .btn-profile,
+    .btn-feedback {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-accept {
+        background: #3498db;
+        color: #fff;
+    }
+
+        .btn-accept:hover:not(:disabled) {
+            background: #2980b9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+
+    .btn-reject {
+        background: #e74c3c;
+        color: #fff;
+    }
+
+        .btn-reject:hover:not(:disabled) {
+            background: #c0392b;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+        }
+
+    .btn-logout,
+    .btn-profile,
+    .btn-feedback {
+        background: #636e72;
+        color: #fff;
+        margin-top: 20px;
+        display: inline-block;
+        width: fit-content;
+    }
+
+        .btn-logout:hover,
+        .btn-profile:hover,
+        .btn-feedback:hover {
+            background: #2d3436;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(99, 110, 114, 0.3);
+        }
+
+    .btn-accept:disabled,
+    .btn-reject:disabled {
+        background: #b0bec5;
+        color: #78909c;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
+
+    .action-taken {
+        color: #78909c;
+        font-style: italic;
+    }
+
+    .alert-info {
+        background-color: #e3f2fd;
+        border: 1px solid #90caf9;
+        padding: 18px;
+        color: #1565c0;
+        border-radius: 12px;
+        text-align: center;
+        font-weight: 600;
+        margin-top: 20px;
+    }
+
+    .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<div class="container">
+    <div class="profile-icon" @onclick="NavigateToProfileView" title="View Profile">
+        <i class="fas fa-user"></i>
+    </div>
+    <div class="table-container">
+        <h2>Worker Dashboard - @(Email ?? "Unknown Worker")</h2>
+
+        @if (requests != null && requests.Any())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>UserEmail</th>
+                        <th>Service</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in requests)
+                    {
+                        <tr>
+                            <td>@request.Id</td>
+                            <td>@request.UserEmail</td>
+                            <td>@request.ServiceType</td>
+                            <td>@(request.PreferredDate.HasValue ? request.PreferredDate.Value.ToString("yyyy-MM-dd") : "N/A")</td>
+                            <td>@(!string.IsNullOrWhiteSpace(request.PreferredTime) ? request.PreferredTime : "N/A")</td>
+                            <td>@request.City</td>
+                            <td>
+                                <span class="badge @GetBadgeClass(request.RequestStatus)">@request.RequestStatus</span>
+                            </td>
+                            <td class="actions">
+                                @if (request.RequestStatus == "Pending")
+                                {
+                                    <button class="btn-accept" @onclick="() => AcceptRequest(request.Id)">Accept</button>
+                                    <button class="btn-reject" @onclick="() => RejectRequest(request.Id)">Reject</button>
+                                }
+                                else
+                                {
+                                    <span class="action-taken">Action Taken</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="alert-info">No service requests found for @(Email ?? "unknown worker").</div>
+        }
+
+        <div class="button-group">
+            <button class="btn-profile" @onclick="NavigateToProfile">Update Profile</button>
+            <button class="btn-feedback" @onclick="NavigateToFeedbackView">View Feedback</button>
+            <button class="btn-logout" @onclick="NavigateToLogin">Logout</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Email { get; set; }
+
+    private List<ServiceRequest> requests = new();
+    private bool _isInitialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Email ??= await GetEmailFromUriAsync();
+
+        if (!string.IsNullOrEmpty(Email))
+        {
+            requests = await RequestService.GetRequestsByWorkerEmailAsync(Email);
+        }
+        else
+        {
+            requests = new List<ServiceRequest>();
+        }
+
+        _isInitialized = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isInitialized && firstRender)
+        {
+            if (string.IsNullOrEmpty(Email))
+            {
+                Email = await JSRuntime.InvokeAsync<string>("sessionStorage.getItem", "userEmail") ?? string.Empty;
+                if (!string.IsNullOrEmpty(Email))
+                {
+                    requests = await RequestService.GetRequestsByWorkerEmailAsync(Email);
+                    StateHasChanged();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(Email))
+            {
+                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "userEmail", Email);
+            }
+        }
+    }
+
+    private async Task<string> GetEmailFromUriAsync()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        return System.Web.HttpUtility.ParseQueryString(uri.Query).Get("email") ?? string.Empty;
+    }
+
+    private async Task AcceptRequest(int requestId)
+    {
+        var request = requests.FirstOrDefault(r => r.Id == requestId);
+        if (request != null)
+        {
+            request.RequestStatus = "Accepted";
+            await RequestService.UpdateRequestAsync(request);
+            requests = await RequestService.GetRequestsByWorkerEmailAsync(Email!);
+            StateHasChanged();
+        }
+    }
+
+    private async Task RejectRequest(int requestId)
+    {
+        var request = requests.FirstOrDefault(r => r.Id == requestId);
+        if (request != null)
+        {
+            request.RequestStatus = "Rejected";
+            await RequestService.UpdateRequestAsync(request);
+            requests = await RequestService.GetRequestsByWorkerEmailAsync(Email!);
+            StateHasChanged();
+        }
+    }
+
+    private string GetBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "Pending",
+            "Accepted" => "Accepted",
+            "Rejected" => "Rejected",
+            _ => "Pending"
+        };
+    }
+
+    private void NavigateToLogin()
+    {
+        NavigationManager.NavigateTo("/login");
+    }
+
+    private void NavigateToProfile()
+    {
+        NavigationManager.NavigateTo($"/worker-profile?email={Uri.EscapeDataString(Email ?? string.Empty)}");
+    }
+
+    private void NavigateToProfileView()
+    {
+        NavigationManager.NavigateTo($"/worker-profile-view?email={Uri.EscapeDataString(Email ?? string.Empty)}");
+    }
+
+    private void NavigateToFeedbackView()
+    {
+        NavigationManager.NavigateTo($"/worker-feedback-view?email={Uri.EscapeDataString(Email ?? string.Empty)}");
+    }
+}
