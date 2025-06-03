@@ -60,7 +60,6 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 
 ###  User Dashboard
 
-- ![Home Page](screenshots/user-dashboard.jpg)
 - ![User Dashboard](screenshots/user-dashboard.jpg)
 - ![Service Search](screenshots/search-service.jpg)
 - ![Request Form](screenshots/request-form.jpg)
