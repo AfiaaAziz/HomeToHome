@@ -88,3 +88,5 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 
 ---
 
+# That’s a quick look inside the HomeToHome platform. Explore the repo to dive deeper or run the project locally to see it in action!
+
