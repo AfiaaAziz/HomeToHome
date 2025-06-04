@@ -40,7 +40,7 @@ With features like role-based access, intuitive dashboards, real-time booking, a
 - **SQL Server + ADO.NET**
 - **Bootstrap 5 + Custom CSS**
 - **Google Maps Embed API**
-- **Session Storage / Local Storage**
+- **Session Storage**
 - **Visual Studio 2022**
 
 ---
