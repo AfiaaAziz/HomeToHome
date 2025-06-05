@@ -1,4 +1,4 @@
-## HomeToHome – A Smart Domestic Service Exchange Platform
+### HomeToHome – A Smart Domestic Service Exchange Platform
 
 HomeToHome is a modern web application built with Blazor Server, designed to connect homeowners with skilled domestic service providers like plumbers, cleaners, electricians, and general repair workers. It streamlines the entire process—from discovery to booking—directly through your browser.
 
